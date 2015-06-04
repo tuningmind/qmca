@@ -1,5 +1,9 @@
 #! /usr/bin/env python
 
+#################################################################################
+##  (c) Copyright 2015  by Jaron T. Krogel, William D. Parker, and tuningmind  ##
+#################################################################################
+
 import code
 import os
 from optparse import OptionParser
@@ -1370,8 +1374,6 @@ def convert(value,source_unit,target_unit):
 #end def convert
 
 
-
-
 try:
     from matplotlib.pyplot import figure,plot,xlabel,ylabel,title,show,ylim,legend,xlim,rcParams,savefig,bar,xticks,subplot,grid,setp,errorbar,loglog,semilogx,semilogy,text
     from html import HTML
@@ -2572,10 +2574,11 @@ class QMCA(QBase):
 
 
         def analyze_data(self):
+            # shows text and creates plots, or creates report
             opt = self.options
             show_text  = not opt.report
             plots = opt.plot or opt.trace or opt.histogram
-            if show_text:
+            def show_text(self):
                 first_prefix = True
                 for prefix in sorted(self.data.keys()):
                     pdata = self.data[prefix]
@@ -2588,7 +2591,12 @@ class QMCA(QBase):
                     #end for
                     first_prefix = False
                 #end for
+            if show_text:
+                show_text(self)
             #end if
+            quantity = ""
+            def plotter(quantity):
+                pass
             if plots:
                 color       = 'b'
                 line        = '-'
@@ -2615,12 +2623,13 @@ class QMCA(QBase):
                         if modes[mode]:
                             np = 0
                             for prefix in sorted(self.data.keys()):
+                                # TODO
                                 first_prefix = np==0
                                 last_prefix  = np==len(self.data)-1
                                 np+=1
                                 if first_prefix or not opt.overlay:
-                                    fig = figure()
-                                    ax = fig.add_subplot(111)
+                                    fig = figure() 
+                                    ax = fig.add_subplot(111) 
                                     xminp =  1e99
                                     xmaxp = -1e99
                                     yminp =  1e99
@@ -2715,7 +2724,7 @@ class QMCA(QBase):
                         #end if
                     #end for
                 #end for
-            show()
+                show()
             #end if
             if opt.report:
                 first = 'LocalEnergy Variance Kinetic LocalPotential ElecElec LocalECP NonLocalECP IonIon'.split()
@@ -2737,8 +2746,8 @@ class QMCA(QBase):
                 # Create HTML file using html module
                 h = HTML('html') 
                 head = h.head()
-                title = head.title("QMCA Report")
-                link = head.link(rel="stylesheet",
+                head.title("QMCA Report")
+                head.link(rel="stylesheet",
                                  type="text/css",
                                  href="qmca_report_style.css")
                 body = h.body()
@@ -2749,12 +2758,11 @@ class QMCA(QBase):
                     body.h2("Prefix: " + prefix)
                     pdata = self.data[prefix]
 
-                    # create a tabke for each series
-                    for series in sorted(pdata.keys()):
+                    # create a table for each series
+                    for series in sorted(pdata.keys()): # TODO
                         body.h3("Series: " + str(series))
                         table = body.table()
                         d = pdata[series]
-                        print d
                         keys_in_order = []
 
                         # order quantities by order in first + last
@@ -2803,6 +2811,9 @@ class QMCA(QBase):
                                     row.td(line_format.format(rounded_mean, rounded_error, units), escape=False)
                                 else:
                                     row.td('inf'.format())
+                        series_string = str("{:0>3}".format(series))
+                        imagefile = prefix + ".s" + series_string + "." + "LocalEnergyTrace.png"
+                        body.img(src=imagefile)
 
                 # writes the whole html object previously instantiated to the file named report.html
                 with open('report.html', 'w') as f:
